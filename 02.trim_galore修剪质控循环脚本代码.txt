@@ -1,0 +1,19 @@
+# Step 1: 创建目录 需要在QC.dir目录中执行
+
+mkdir -p wucanfq1 wucanfq2
+
+# Step 2: 分类_r1.fq.gz和_r2.fq.gz到对应目录（注意.gz后缀）
+mv *_r1.fq.gz wucanfq1/ 2>/dev/null
+mv *_r2.fq.gz wucanfq2/ 2>/dev/null
+
+# Step 3: 循环处理（匹配CRR开头的前缀）
+for file in wucanfq1/CRR*.fq.gz; do
+    # 提取前缀（比如CRR1382720）
+    prefix=$(basename "$file" _r1.fq.gz)
+    # 执行trim_galore（处理压缩文件）
+    trim_galore -j 4 --paired --quality 25 --fastqc -o trimmed \
+        wucanfq1/"${prefix}"_r1.fq.gz \
+        wucanfq2/"${prefix}"_r2.fq.gz
+done
+
+multiqc trimmed --no-data-dir -n wucanraw.QC

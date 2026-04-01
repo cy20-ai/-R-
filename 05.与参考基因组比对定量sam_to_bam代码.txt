@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# 循环遍历当前目录下所有后缀为.sam的文件
+for sam_file in *.sam; do
+    # 提取文件名前缀（去除.sam后缀）
+    prefix="${sam_file%.sam}"
+    echo "开始处理文件: $sam_file"
+
+    # 1. SAM格式转为BAM格式（二进制压缩，节省空间）
+    samtools view -bS "$sam_file" -o "${prefix}.bam"
+    echo "   完成SAM到BAM的转换，生成: ${prefix}.bam"
+
+    # 2. 对BAM文件进行排序
+    samtools sort "${prefix}.bam" -o "${prefix}.sorted.bam"
+    echo "   完成BAM排序，生成: ${prefix}.sorted.bam"
+
+    # 3. 为排序后的BAM文件创建索引（便于后续快速随机访问）
+    samtools index "${prefix}.sorted.bam"
+    echo "   完成BAM索引创建，生成: ${prefix}.sorted.bam.bai"
+done
+
+echo "所有SAM文件处理完毕！"

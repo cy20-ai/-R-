@@ -1,0 +1,49 @@
+#!/bin/bash
+
+# ====================== 配置参数（根据实际情况修改）======================
+INDEX="/mnt/e/index/huayaoindex.fa"  # 参考基因组索引路径
+THREADS=6                            # 线程数
+INPUT_DIR="/mnt/e/fastq"             # 输入fastq.gz文件的目录（需自行设置）
+OUTPUT_DIR="/mnt/e/alignment" # 输出sam文件的目录
+LOG_DIR="/mnt/e/mapping" #创建日志输出目录
+# 双端文件的后缀匹配规则（根据你的实际命名修改，比如 _1.fastq.gz / _2.fastq.gz）
+READ1_SUFFIX="_R1.fastq.gz"
+READ2_SUFFIX="_R2.fastq.gz"
+
+# ====================== 核心逻辑 ======================
+# 创建输出目录（不存在则自动生成）
+mkdir -p "${OUTPUT_DIR}"
+mkdir -p "$LOG_DIR"
+# 循环遍历INPUT_DIR下的所有R1文件（双端的第一个文件）
+for fq1 in "${INPUT_DIR}"/*${READ1_SUFFIX}; do
+    # 跳过非文件（如目录）或空匹配（当目录下无对应文件时）
+    [ -f "$fq1" ] || continue
+
+    # 提取样本名（移除路径和R1后缀，例如：/mnt/e/fastq/sample_R1.fastq.gz → sample）
+    sample=$(basename "$fq1" "${READ1_SUFFIX}")
+    # 拼接对应的R2文件路径（替换R1后缀为R2后缀）
+    fq2="${INPUT_DIR}/${sample}${READ2_SUFFIX}"
+
+    # 检查R2文件是否存在，不存在则跳过并提示
+    if [ ! -f "$fq2" ]; then
+        echo "   警告：$sample 的R2文件 $fq2 不存在，跳过该样本"
+        continue
+    fi
+
+    # 定义输出sam文件的路径（放到OUTPUT_DIR目录下，避免文件混乱）
+    sam_out="${OUTPUT_DIR}/${sample}.sam"
+
+    echo "===== 开始处理：$sample ====="
+    # 双端比对：使用-1和-2参数传入成对的fastq文件，-p指定线程数
+    hisat2 -p "${THREADS}" -x "${INDEX}" -1 "${fq1}" -2 "${fq2}" -S "${sam_out}"> mapping/${sample}.log
+
+    # 检查当前样本是否处理成功
+    if [ $? -eq 0 ]; then
+        echo "✅ 成功：${sam_out} 已生成"
+    else
+        echo "❌ 失败：$sample 处理出错"
+    fi
+    echo "----------------------------------------"
+done
+multiqc mapping --no-data-dir   -n mapQc   -o /mnt/e/mapping #整合报告
+echo "所有文件处理完毕！结果在：${OUTPUT_DIR}"

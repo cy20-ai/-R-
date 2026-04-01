@@ -1,0 +1,6 @@
+1.hisat2-build -p 6  /path/to/ref_genome.fa （# 参考基因组实际路径）   index/huayaoindex
+
+ 2.hisat2_extract_exons.py ./ZH11.T2T.genome.gff3 >./genes.exon
+hisat2_extract_splice_sites.py ./ZH11.T2T.genome.gff3 > ./genes.ss
+ mkdir -p ../genome
+ hisat2-build --ss ./genes.ss --exon ./genes.exon ./ZH11.T2T.genome.fasta（# 参考基因组实际路径） ../genome/huayaoindex/（索引实际路径）

@@ -1,0 +1,15 @@
+# 创建主目录及子目录，原始数据放在QCdir中
+mkdir -p /mnt/e/alignment_workdir/{index,mapping,output,expression,multiqc_reports，QCdir}
+cd alignment_workdir 
+# 定义变量（后续命令复用，替换为你的实际文件路径）
+REF_GENOME="/path/to/ref_genome.fa"  # 参考基因组路径
+FASTQ_R1="/path/to/sample_R1.fq.gz"  # R1文件路径
+FASTQ_R2="/path/to/sample_R2.fq.gz"  # R2文件路径
+ANNOTATION="/path/to/annotation.gtf" # 注释文件路径
+THREADS=6  # 线程数，根据服务器配置调整
+SAMPLE_NAME="sample"  # 样本名，自定义
+
+#数据质控
+fastqc -q -t 4 *.fq.gz  -o /mnt/e/alignment_workdir/QCdir
+multiqc trimmed  --no-data-dir -n new.QC
+/home/Alpha/QCdir
