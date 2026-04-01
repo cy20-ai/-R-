@@ -4,7 +4,7 @@ library(dplyr)
 library(tidyr)
 library(scales)
 
-# 读取并预处理数据（与原逻辑完全一致）
+# 读取并预处理数据
 raw_data <- read_csv(
   file = "C:/Users/cy/Desktop/论文/数据/SR.csv",
   col_names = TRUE,
@@ -21,7 +21,7 @@ long_data <- raw_data %>%
     sampling_date = factor(sampling_date, levels = date_columns)
   )
 
-# 分组统计（自动计算Mean、std、n、SE）
+# 分组统计
 statistics <- long_data %>%
   group_by(type, sampling_date) %>%
   summarise(
@@ -32,11 +32,11 @@ statistics <- long_data %>%
     .groups = "drop"
   )
 
-# 新增：查看数据范围（可选，用于调试，可删除）
+# 查看数据范围
 cat("土壤温度均值范围：\n")
 cat("最小值：", min(statistics$mean_soil_r, na.rm = TRUE), "\n")
 cat("最大值：", max(statistics$mean_soil_r, na.rm = TRUE), "\n")
-# 考虑误差棒后的整体范围（更精准适配y轴）
+# 考虑误差棒后的整体范围
 # ========== 关键修复：给se_soil_r加上statistics$，指定所属数据集 ==========
 y_min <- min(statistics$mean_soil_r - statistics$se_soil_r, na.rm = TRUE)
 y_max <- max(statistics$mean_soil_r + statistics$se_soil_r + 10, na.rm = TRUE)
@@ -48,7 +48,7 @@ write_csv(
   file = "C:/Users/cy/Desktop/论文/整合数据/mean SR Std数据.csv"
 )
 
-# 绘制图表（核心：y轴自动适配数据范围）
+# 绘制图表
 final_plot <- ggplot(
   statistics,
   aes(
@@ -111,8 +111,8 @@ final_plot <- ggplot(
     plot.subtitle = element_text(size = 10, color = "gray60", hjust = 0),
     panel.grid = element_blank(),
     panel.border = element_rect(color = "black", linewidth = 1),
-    # 可选：设置字体支持特殊符号（进一步避免编码问题）
-    # text = element_text(family = "Arial Unicode MS")  # Windows系统推荐
+    # 设置字体支持特殊符号
+    # text = element_text(family = "Arial Unicode MS")  
   )
 
 # 保存图片
